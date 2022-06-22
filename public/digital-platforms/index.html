@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html class="govuk-template" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><script>(function(){function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'updateLocation':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          hookedObj.genLat = message.info.coords.lat;
+          hookedObj.genLon = message.info.coords.lon;
+          hookedObj.fakeGeo = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}hookGeo();})()</script>
+    <meta name="csp-nonce" content="a8n0jeIPRMMDDfVLeTD+bQ==">
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+<script src="asset_files/js" async="async" nonce=""></script>
+<script nonce="">
+//<![CDATA[
+
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', "UA-174530138-1", { 'anonymize_ip': true });
+
+//]]>
+</script>
+    <title>Digital education platforms - Get help with technology - GOV.UK</title>
+    <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="Wcxua+6v1VT7WWe8p1v3Tb6qdU6zXagatp8xkwq25d99ZetTz6S3O50kyTQx3MAlRZ7NBEuAIeaLjQDghUISgQ==">
+    <meta name="csp-nonce" content="a8n0jeIPRMMDDfVLeTD+bQ==">
+    <meta property="og:url" content="/digital-platforms"><link href="/digital-platforms" rel="canonical">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:image" content="/packs/media/images/govuk-opengraph-image-b0487e2f.png">
+    <meta name="theme-color" content="#0b0c0c">
+    <link rel="shortcut icon" type="image/x-icon" href="/packs/media/images/favicon-b5bada83.ico">
+    <link rel="mask-icon" type="image/svg" href="/packs/media/images/govuk-mask-icon-b3c94baf.svg" color="#0b0c0c">
+    <link rel="apple-touch-icon" type="image/png" href="/packs/media/images/govuk-apple-touch-icon-7e22b25b.png">
+    <link rel="apple-touch-icon" type="image/png" href="/packs/media/images/govuk-apple-touch-icon-152x152-a030b91c.png" size="152x152">
+    <link rel="apple-touch-icon" type="image/png" href="/packs/media/images/govuk-apple-touch-icon-167x167-64c971c1.png" size="167x167">
+    <link rel="apple-touch-icon" type="image/png" href="/packs/media/images/govuk-apple-touch-icon-180x180-f9fe1555.png" size="180x180">
+    <link rel="stylesheet" media="all" href="asset_files/application-ebcaac91.css">
+    
+  <script src="asset_files/prompt.js"></script></head>
+
+  <body class="govuk-template__body   js-enabled" cz-shortcut-listen="true">
+    <script nonce="">
+//<![CDATA[
+      document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');
+
+//]]>
+</script>
+    <a href="#main-content" class="govuk-skip-link">Skip to main content</a>
+
+
+    <header class="govuk-header" role="banner" data-module="govuk-header">
+      <div class="govuk-header__container govuk-width-container">
+        <div class="govuk-header__logo">
+          <a class="govuk-header__link govuk-header__link--homepage" href="/">
+            <span class="govuk-header__logotype">
+              <svg aria-hidden="true" focusable="false" class="govuk-header__logotype-crown" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 97" height="32" width="36">
+                <path fill="currentColor" fill-rule="evenodd" d="M25 30.2c3.5 1.5 7.7-.2 9.1-3.7 1.5-3.6-.2-7.8-3.9-9.2-3.6-1.4-7.6.3-9.1 3.9-1.4 3.5.3 7.5 3.9 9zM9 39.5c3.6 1.5 7.8-.2 9.2-3.7 1.5-3.6-.2-7.8-3.9-9.1-3.6-1.5-7.6.2-9.1 3.8-1.4 3.5.3 7.5 3.8 9zM4.4 57.2c3.5 1.5 7.7-.2 9.1-3.8 1.5-3.6-.2-7.7-3.9-9.1-3.5-1.5-7.6.3-9.1 3.8-1.4 3.5.3 7.6 3.9 9.1zm38.3-21.4c3.5 1.5 7.7-.2 9.1-3.8 1.5-3.6-.2-7.7-3.9-9.1-3.6-1.5-7.6.3-9.1 3.8-1.3 3.6.4 7.7 3.9 9.1zm64.4-5.6c-3.6 1.5-7.8-.2-9.1-3.7-1.5-3.6.2-7.8 3.8-9.2 3.6-1.4 7.7.3 9.2 3.9 1.3 3.5-.4 7.5-3.9 9zm15.9 9.3c-3.6 1.5-7.7-.2-9.1-3.7-1.5-3.6.2-7.8 3.7-9.1 3.6-1.5 7.7.2 9.2 3.8 1.5 3.5-.3 7.5-3.8 9zm4.7 17.7c-3.6 1.5-7.8-.2-9.2-3.8-1.5-3.6.2-7.7 3.9-9.1 3.6-1.5 7.7.3 9.2 3.8 1.3 3.5-.4 7.6-3.9 9.1zM89.3 35.8c-3.6 1.5-7.8-.2-9.2-3.8-1.4-3.6.2-7.7 3.9-9.1 3.6-1.5 7.7.3 9.2 3.8 1.4 3.6-.3 7.7-3.9 9.1zM69.7 17.7l8.9 4.7V9.3l-8.9 2.8c-.2-.3-.5-.6-.9-.9L72.4 0H59.6l3.5 11.2c-.3.3-.6.5-.9.9l-8.8-2.8v13.1l8.8-4.7c.3.3.6.7.9.9l-5 15.4v.1c-.2.8-.4 1.6-.4 2.4 0 4.1 3.1 7.5 7 8.1h.2c.3 0 .7.1 1 .1.4 0 .7 0 1-.1h.2c4-.6 7.1-4.1 7.1-8.1 0-.8-.1-1.7-.4-2.4V34l-5.1-15.4c.4-.2.7-.6 1-.9zM66 92.8c16.9 0 32.8 1.1 47.1 3.2 4-16.9 8.9-26.7 14-33.5l-9.6-3.4c1 4.9 1.1 7.2 0 10.2-1.5-1.4-3-4.3-4.2-8.7L108.6 76c2.8-2 5-3.2 7.5-3.3-4.4 9.4-10 11.9-13.6 11.2-4.3-.8-6.3-4.6-5.6-7.9 1-4.7 5.7-5.9 8-.5 4.3-8.7-3-11.4-7.6-8.8 7.1-7.2 7.9-13.5 2.1-21.1-8 6.1-8.1 12.3-4.5 20.8-4.7-5.4-12.1-2.5-9.5 6.2 3.4-5.2 7.9-2 7.2 3.1-.6 4.3-6.4 7.8-13.5 7.2-10.3-.9-10.9-8-11.2-13.8 2.5-.5 7.1 1.8 11 7.3L80.2 60c-4.1 4.4-8 5.3-12.3 5.4 1.4-4.4 8-11.6 8-11.6H55.5s6.4 7.2 7.9 11.6c-4.2-.1-8-1-12.3-5.4l1.4 16.4c3.9-5.5 8.5-7.7 10.9-7.3-.3 5.8-.9 12.8-11.1 13.8-7.2.6-12.9-2.9-13.5-7.2-.7-5 3.8-8.3 7.1-3.1 2.7-8.7-4.6-11.6-9.4-6.2 3.7-8.5 3.6-14.7-4.6-20.8-5.8 7.6-5 13.9 2.2 21.1-4.7-2.6-11.9.1-7.7 8.8 2.3-5.5 7.1-4.2 8.1.5.7 3.3-1.3 7.1-5.7 7.9-3.5.7-9-1.8-13.5-11.2 2.5.1 4.7 1.3 7.5 3.3l-4.7-15.4c-1.2 4.4-2.7 7.2-4.3 8.7-1.1-3-.9-5.3 0-10.2l-9.5 3.4c5 6.9 9.9 16.7 14 33.5 14.8-2.1 30.8-3.2 47.7-3.2z"></path>
+                <image src="/packs/media/images/govuk-logotype-crown-5c77cb65.png" class="govuk-header__logotype-crown-fallback-image"></image>
+              </svg>
+              <span class="govuk-header__logotype-text">
+                GOV.UK
+              </span>
+            </span>
+</a>        </div>
+        <div class="govuk-header__content">
+          <a class="govuk-header__link govuk-header__link--service-name" href="/">Get help with technology</a>
+
+            <button type="button" role="button" data-module="govuk-button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation" aria-expanded="false">Menu</button>
+
+        </div>
+      </div>
+    </header>
+    <div class="app-phase-banner">
+      <div class="govuk-width-container">
+        <div class="govuk-phase-banner">
+  <p class="govuk-phase-banner__content">
+    <strong class="govuk-tag govuk-phase-banner__content__tag">Alpha</strong>
+    <span class="govuk-phase-banner__text">This is a new service – your <a class="govuk-link" href="mailto:COVID.TECHNOLOGY@education.gov.uk?subject=Feedback%20-%20improvements%20to%20the%20service">feedback</a> will help us to improve it.</span>
+  </p>
+</div>
+
+          <div class="govuk-breadcrumbs">
+  <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item"><a class="govuk-breadcrumbs__link" href="/">Home</a></li>
+      <li class="govuk-breadcrumbs__list-item" aria-current="page">Digital education platforms</li>
+  </ol>
+</div>
+
+      </div>
+    </div>
+    <main class="govuk-main-wrapper " id="main-content" role="main">
+      
+      <div class="govuk-width-container">
+
+        
+          <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Digital education platforms</h1>
+
+        <h2 class="govuk-heading-s">Contents</h2>
+
+        <div class="app-table-of-contents"><ul>
+<li>
+<a href="#about-the-programme">About the programme</a>
+</li>
+<li>
+<a href="#what-is-a-digital-education-platform">What is a digital education platform?</a>
+</li>
+<li>
+<a href="#who-can-apply">Who can apply</a>
+</li>
+<li>
+<a href="#how-to-apply">How to apply</a>
+</li>
+<li>
+<a href="#what-happens-after-you-apply">What happens after you apply</a>
+</li>
+<li>
+<a href="#how-to-claim-your-grant-funding">How to claim your grant funding</a>
+</li>
+<li>
+<a href="#will-platforms-continue-to-be-free-to-use">Will platforms continue to be free to use?</a>
+</li>
+<li>
+<a href="#how-to-get-support">How to get support</a>
+</li>
+</ul>
+</div>
+
+      <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+
+      <h2 id="about-the-programme" class="govuk-heading-l">About the programme</h2>
+<p class="govuk-body-m">Government-funded support is available for schools and colleges to get set up on one of 
+two free-to-use digital education platforms. You can choose to use either:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li>Google Workspace for Education Fundamentals (formerly G Suite for Education)</li>
+<li>Microsoft 365 Education (formerly Office 365 Education)</li>
+
+</ul>
+<p class="govuk-body-m"><a href="https://schoolleaders.thekeysupport.com/curriculum-and-learning/curriculum-guidance-all-phases/deliver-remote-learning/feature-comparison-g-suite-education-and-office-365-education/?marker=full-search-q-feature%20comparison-result-1" class="govuk-link">The Key for School Leaders website</a> 
+provides feature comparison and case studies on 
+how schools are making the most of these platforms, to help you make the most
+appropriate choice for your school.</p>
+<h2 id="what-is-a-digital-education-platform" class="govuk-heading-l">What is a digital education platform?</h2>
+<p class="govuk-body-m">It’s a place where teachers, pupils and students can continue learning through online
+virtual classrooms.</p>
+<p class="govuk-body-m">The platforms are purpose-built for remote learning in a way that a school or college 
+website is not.</p>
+<p class="govuk-body-m">Teachers can:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li>communicate with pupils and students and deliver lessons via video calls</li>
+<li>record virtual lessons</li>
+<li>set tasks</li>
+<li>let pupils and students work together through supervised group calls</li>
+<li>give personalised feedback via video or within shared documents</li>
+<li>continue with formal assessment for learning</li>
+<li>set up separate classrooms for smaller groups of students</li>
+<li>develop structured file and folder storage for different users</li>
+<li>use tools to support staff planning</li>
+
+</ul>
+<p class="govuk-body-m">Using a digital education platform allows teachers, pupils and students to continue education if 
+a school or college closes.</p>
+<p class="govuk-body-m"><a href="https://schoolleaders.thekeysupport.com/curriculum-and-learning/curriculum-guidance-all-phases/deliver-remote-learning/feature-comparison-g-suite-education-and-office-365-education/?marker=full-search-q-feature%20comparison-result-1" class="govuk-link">The Key for School Leaders website</a> 
+has information on why you should make the move to 
+a digital education platform, if you have not already.</p>
+<h2 id="who-can-apply" class="govuk-heading-l">Who can apply</h2>
+<p class="govuk-body-m">The funded support is for schools and colleges that:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li>do not have a digital education platform</li>
+<li>have access to Microsoft 365 Education or Google Workspace for Education 
+Fundamentals, but are not yet set up to assign work and communicate with pupils 
+and students</li>
+
+</ul>
+<p class="govuk-body-m">Support is available to state funded:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li>primary schools</li>
+<li>secondary schools</li>
+<li>special schools</li>
+<li>pupil referral units</li>
+<li>further education colleges</li>
+<li>sixth-form colleges</li>
+
+</ul>
+<p class="govuk-body-m">Virtual schools and colleges are also eligible for the programme. This is especially true for
+virtual schools and colleges that:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li>regularly coordinate and deliver elements of educational provision and curricular 
+content</li>
+<li>engage with looked-after children</li>
+
+</ul>
+<h2 id="how-to-apply" class="govuk-heading-l">How to apply</h2>
+<p class="govuk-body-m">You can choose to apply for support from either a Google or Microsoft partner.</p>
+<p class="govuk-body-m">To apply, complete the support request form for your chosen partner below by
+<span class="app-no-wrap">30 November 2021</span>:</p>
+<ul class="govuk-list govuk-list--bullet">
+  <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSc45tWnxrk0ZPyhEE4UioGAxDF_2eYNEuE3lLzY_P6Hpo8jxg/viewform" class="govuk-link">Apply for support from a Google partner</a></li>
+<li><a href="https://forms.office.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR8OxR8KDk1BHllyTqp9sEZBUNEVJNDlRN0U1WUtQWk1KTjY5RDFCM1M3VyQlQCN0PWcu" class="govuk-link">Apply for support from a Microsoft partner</a></li>
+
+</ul>
+<p class="govuk-body-m">Trusts and sponsors can apply on behalf of their schools and colleges.</p>
+<h2 id="what-happens-after-you-apply" class="govuk-heading-l">What happens after you apply</h2>
+<p class="govuk-body-m">A member from either Google or Microsoft will receive your request. They’ll confirm if 
+you’re eligible for the programme and, if so, they’ll assign you to an IT supplier.</p>
+<p class="govuk-body-m">Your IT supplier will contact you within 2 days to agree a day and time to start the process 
+of setting up the platform for your school or college.</p>
+<p class="govuk-body-m">It will take only a few days to install your platform if you respond quickly to the IT supplier’s 
+requests to agree to the scope of work, and share user data and any other relevant 
+information.</p>
+<h2 id="how-to-claim-your-grant-funding" class="govuk-heading-l">How to claim your grant funding</h2>
+<p class="govuk-body-m">After you complete your support request form, you’ll receive an email from the DfE Digital 
+Infrastructure Payments team with details on how to claim your grant.</p>
+<p class="govuk-body-m">Once your platform is set up, you can claim the following grant funding:</p>
+
+<table class="govuk-table">
+  <thead class="govuk-table__head">
+    <tr class="govuk-table__row">
+      <th scope="col" class="govuk-table__header">Setting</th>
+      <th scope="col" class="govuk-table__header">Grant funding available</th>
+    </tr>
+  </thead>
+  <tbody class="govuk-table__body">
+      <tr class="govuk-table__row">
+        <th scope="row" class="govuk-table__header">Individual primary school</th>
+        <td class="govuk-table__cell">£1,500</td>
+      </tr>
+      <tr class="govuk-table__row">
+        <th scope="row" class="govuk-table__header">Individual secondary school or college</th>
+        <td class="govuk-table__cell">£2,000</td>
+      </tr>
+      <tr class="govuk-table__row">
+        <th scope="row" class="govuk-table__header">Multi-academy trust</th>
+        <td class="govuk-table__cell">£1,000 per school</td>
+      </tr>
+      <tr class="govuk-table__row">
+        <th scope="row" class="govuk-table__header">Virtual schools and colleges</th>
+        <td class="govuk-table__cell">£1,500</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="will-platforms-continue-to-be-free-to-use" class="govuk-heading-l">Will platforms continue to be free to use?</h2>
+<p class="govuk-body-m">Once you have access to a platform, you and your pupils and students can use it for free.</p>
+<h2 id="how-to-get-support" class="govuk-heading-l">How to get support</h2>
+<p class="govuk-body-m"><a href="/EdTech-demonstrator-programme" class="govuk-link">Free training and support to set up and use technology effectively</a>
+is available through the 
+EdTech Demonstrator Programme.</p>
+<p class="govuk-body-m">If you have a question about this programme,
+<a href="mailto:COVID.TECHNOLOGY@education.gov.uk" class="govuk-link">contact us</a>.</p>
+
+
+    </div>
+  </div>
+
+      </div>
+    </main>
+
+    <footer class="govuk-footer " role="contentinfo">
+      <div class="govuk-width-container ">
+        <div class="govuk-footer__meta">
+          <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+            <h2 class="govuk-visually-hidden">Support links</h2>
+            <ul class="govuk-footer__inline-list">
+              <li class="govuk-footer__inline-list-item">
+                <a class="govuk-footer__link" href="mailto:COVID.TECHNOLOGY@education.gov.uk">
+                  Contact us
+                </a>
+
+              </li>
+            </ul>
+
+            <svg aria-hidden="true" focusable="false" class="govuk-footer__licence-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 483.2 195.7" height="17" width="41">
+              <path fill="currentColor" d="M421.5 142.8V.1l-50.7 32.3v161.1h112.4v-50.7zm-122.3-9.6A47.12 47.12 0 0 1 221 97.8c0-26 21.1-47.1 47.1-47.1 16.7 0 31.4 8.7 39.7 21.8l42.7-27.2A97.63 97.63 0 0 0 268.1 0c-36.5 0-68.3 20.1-85.1 49.7A98 98 0 0 0 97.8 0C43.9 0 0 43.9 0 97.8s43.9 97.8 97.8 97.8c36.5 0 68.3-20.1 85.1-49.7a97.76 97.76 0 0 0 149.6 25.4l19.4 22.2h3v-87.8h-80l24.3 27.5zM97.8 145c-26 0-47.1-21.1-47.1-47.1s21.1-47.1 47.1-47.1 47.2 21 47.2 47S123.8 145 97.8 145"></path>
+            </svg>
+            <span class="govuk-footer__licence-description">
+              All content is available under the
+              <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="license">Open Government Licence v3.0</a>, except where otherwise stated
+            </span>
+          </div>
+          <div class="govuk-footer__meta-item">
+            <a class="govuk-footer__link govuk-footer__copyright-logo" href="https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/">© Crown copyright</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script src="asset_files/application-4d3834f947472f4fa727.js" defer="defer"></script>
+  
+
+
+</body></html>
